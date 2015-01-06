@@ -1,6 +1,8 @@
 package co.mimosa.kafka.consumer;
 
 import co.mimosa.kafka.callable.IEventAnalyzer;
+import co.mimosa.kafka.producer.MimosaProducer;
+import co.mimosa.kafka.valueobjects.GateWayData;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import kafka.javaapi.consumer.ConsumerConnector;
@@ -93,5 +95,13 @@ public class KafkaMultiThreadedConsumerTest {
   @Test
   public void testGetPhase() throws Exception {
     assertThat(kafkaMultiThreadedConsumer.getPhase()).isEqualTo(1);
+  }
+  @Test
+  public void postMessage(){
+    MimosaProducer producer= new MimosaProducer("localhost:62981,localhost:62982");
+    GateWayData data = new GateWayData(System.currentTimeMillis(),false,null,false,"abc");
+    producer.sendDataToKafka("deviceData","123",data);
+    System.out.println("Finished sending data");
+    producer.close();
   }
 }

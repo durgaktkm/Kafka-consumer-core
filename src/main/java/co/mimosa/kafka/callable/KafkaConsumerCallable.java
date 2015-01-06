@@ -1,10 +1,13 @@
 package co.mimosa.kafka.callable;
 
+import co.mimosa.kafka.valueobjects.GateWayData;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 import java.util.concurrent.Callable;
 
 /**
@@ -30,9 +33,12 @@ public class KafkaConsumerCallable implements Callable{
   public Object call() throws Exception {
     for (MessageAndMetadata<byte[], byte[]> aStream : (Iterable<MessageAndMetadata<byte[], byte[]>>) stream) {
       logger.debug("Message from thread " + threadNumber + ": ");
-      String message = new String(aStream.message());
-      logger.debug("Message from thread " + threadNumber + ": " + message);
-      Boolean analyze = analyzer.analyze(message);
+      ByteArrayInputStream in = new ByteArrayInputStream(aStream.message());
+      ObjectInputStream is = new ObjectInputStream(in);
+      GateWayData gateWayData = (GateWayData) is.readObject();
+      String key = new String(aStream.key());
+      logger.debug("Message from thread " + threadNumber + ": " + gateWayData);
+      Boolean analyze = analyzer.analyze(key,gateWayData);
       if(analyze)consumer.commitOffsets();
     }
     return true;

@@ -12,7 +12,7 @@ public class MimosaSerialNumberPartitoner implements Partitioner {
     int partition = 0;
     //int iKey =(Integer) key;
     if (key != null && ((String)key).trim()!="") {
-      partition = key.hashCode() % numPartitions;
+      partition = Math.abs(key.hashCode()) % numPartitions;
     }
     return partition;
   }

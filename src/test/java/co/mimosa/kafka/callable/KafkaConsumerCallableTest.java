@@ -1,5 +1,6 @@
 package co.mimosa.kafka.callable;
 
+import co.mimosa.kafka.valueobjects.GateWayData;
 import com.amazonaws.services.s3.AmazonS3;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
@@ -21,8 +22,9 @@ public class KafkaConsumerCallableTest {
   @Before
   public void setUp() throws Exception {
     eventAnalyzer = new IEventAnalyzer() {
-       public Boolean analyze(String str) {
-          return true;
+
+      @Override public Boolean analyze(String Key, GateWayData data) {
+        return null;
       }
     };
     s3 = mock(AmazonS3.class);
