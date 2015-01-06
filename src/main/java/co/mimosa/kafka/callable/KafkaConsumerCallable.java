@@ -1,13 +1,16 @@
 package co.mimosa.kafka.callable;
 
+import co.mimosa.kafka.encoder.MimosaSerializerDeserializer;
 import co.mimosa.kafka.valueobjects.GateWayData;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 
 /**
@@ -33,14 +36,29 @@ public class KafkaConsumerCallable implements Callable{
   public Object call() throws Exception {
     for (MessageAndMetadata<byte[], byte[]> aStream : (Iterable<MessageAndMetadata<byte[], byte[]>>) stream) {
       logger.debug("Message from thread " + threadNumber + ": ");
-      ByteArrayInputStream in = new ByteArrayInputStream(aStream.message());
-      ObjectInputStream is = new ObjectInputStream(in);
-      GateWayData gateWayData = (GateWayData) is.readObject();
+      GateWayData gateWayData = MimosaSerializerDeserializer.fromBytes(aStream.message());
       String key = new String(aStream.key());
       logger.debug("Message from thread " + threadNumber + ": " + gateWayData);
       Boolean analyze = analyzer.analyze(key,gateWayData);
       if(analyze)consumer.commitOffsets();
     }
     return true;
+  }
+
+  public GateWayData fromBytes(byte[] bytes) {
+    ObjectMapper objectMapper = new ObjectMapper();
+    try{
+      return objectMapper.readValue(bytes,GateWayData.class);
+    } catch (JsonMappingException e) {
+      logger.debug("Exception while converting object to json "+e.getMessage());
+      e.printStackTrace();
+    } catch (JsonParseException e) {
+      logger.debug("Exception while converting object to json "+e.getMessage());
+      e.printStackTrace();
+    } catch (IOException e) {
+      logger.debug("Exception while converting object to json "+e.getMessage());
+      e.printStackTrace();
+    }
+    return null;
   }
 }
